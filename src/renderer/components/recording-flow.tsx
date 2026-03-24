@@ -106,12 +106,11 @@ export default function RecordingFlow() {
         setPreviewUrl(url)
         setPhase('preview')
 
-        // Save to disk via main process
+        // Save to disk via preload IPC bridge
         try {
           const arrayBuffer = await blob.arrayBuffer()
-          // @ts-ignore - custom IPC handler
-          const record = await (window as any).captureAPI_internal?.saveRecording?.(arrayBuffer, duration)
-            || await saveRecordingViaIPC(arrayBuffer, duration)
+          // Use the exposed saveRecording via preload
+          const record = await (window as any).captureAPI?.saveRecording?.(arrayBuffer, duration)
           if (record) {
             addCapture(record)
           }
@@ -130,15 +129,6 @@ export default function RecordingFlow() {
       console.error('Recording failed:', err)
       showToast('Failed to start recording', 'error')
     }
-  }
-
-  async function saveRecordingViaIPC(arrayBuffer: ArrayBuffer, dur: number) {
-    // Use the electron IPC to save
-    const { ipcRenderer } = window.require?.('electron') || {}
-    if (ipcRenderer) {
-      return ipcRenderer.invoke('recording:save', arrayBuffer, dur)
-    }
-    return null
   }
 
   function stopRecording() {

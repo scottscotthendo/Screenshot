@@ -12,7 +12,11 @@ mac:
     - dmg
     - zip
   icon: resources/icon.icns
-  entitlements: null
-  entitlementsInherit: null
+  entitlements: entitlements.mac.plist
+  entitlementsInherit: entitlements.mac.plist
+  extendInfo:
+    NSMicrophoneUsageDescription: "McSnapface needs mic access to record audio with your screen recordings."
+    NSCameraUsageDescription: "McSnapface needs camera access for webcam overlay during recordings."
+    NSScreenCaptureUsageDescription: "McSnapface needs screen capture access to take screenshots and record your screen."
 dmg:
   artifactName: McSnapface-${version}.${ext}

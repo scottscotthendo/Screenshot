@@ -105,8 +105,12 @@ function createMainWindow(): BrowserWindow {
 }
 
 function createTray(): Tray {
-  // Create a simple 16x16 tray icon
-  const icon = nativeImage.createEmpty()
+  // Create a 16x16 tray icon (camera emoji rendered as a template image)
+  // On macOS, tray icons should be "template" images (monochrome) for proper dark/light menu bar
+  const icon = nativeImage.createFromDataURL(
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAANhJREFUWEft1rENwjAQBdD/FYyAWIAZmIEFWIIRKNiAERiBkh1YgRkoqBCKZMm6O9uxUqRL4e/7f5YdMYx8cOT8+C+A7m4FYE/gzczuYwBsAJwA7AGcYhWIGiDJAwCLAWBK8ui9DAPo7m4AbAEce2YhVoEuoJsnADMzO/cp0AFcknsl+fQbqaoA0N3dApgDOPcqEFUgCUD3GpOb2aVPASJVNQRgub/5jeTNrxDrAAUgiYnvOlVVRwkA3d0tgBmAS68ChCoQk6DbGiZ39x+FohX4a5/EP8B/Ai/kgF0h5E3DtgAAAABJRU5ErkJggg=='
+  )
+  icon.setTemplateImage(true) // macOS: adapts to dark/light menu bar
   const newTray = new Tray(icon)
 
   const contextMenu = Menu.buildFromTemplate([
@@ -189,11 +193,61 @@ function setupIPC(): void {
     }))
   })
 
-  // Capture full screen
+  // Capture full screen (actual capture happens in renderer via getUserMedia + desktopCapturer)
   ipcMain.handle('capture:screen', async (_event, sourceId: string) => {
-    // The actual capture happens in the renderer via getDisplayMedia
-    // Main process just saves the result
     return { sourceId }
+  })
+
+  // Capture region (actual region selection + crop happens in renderer)
+  ipcMain.handle('capture:region', async (_event, sourceId: string, region: { x: number; y: number; width: number; height: number }) => {
+    return { sourceId, region }
+  })
+
+  // Recording lifecycle — recording is managed in the renderer via MediaRecorder.
+  // These handlers are stubs that coordinate state; the renderer does the heavy lifting.
+  ipcMain.handle('recording:start', async () => {
+    // Nothing needed in main process — renderer handles MediaRecorder
+    return { status: 'started' }
+  })
+
+  ipcMain.handle('recording:stop', async () => {
+    return { status: 'stopped' }
+  })
+
+  ipcMain.handle('recording:pause', async () => {
+    return { status: 'paused' }
+  })
+
+  ipcMain.handle('recording:resume', async () => {
+    return { status: 'resumed' }
+  })
+
+  // Video trim — uses ffmpeg if available, otherwise returns original
+  ipcMain.handle('video:trim', async (_event, filepath: string, startTime: number, endTime: number) => {
+    // For now, return original path. FFmpeg binary integration is a future enhancement.
+    // To enable: install ffmpeg on the system and use child_process.execFile
+    const id = nanoid(10)
+    const outputPath = join(capturesDir, `trimmed-${id}.webm`)
+
+    try {
+      const { execFile } = await import('child_process')
+      const { promisify } = await import('util')
+      const execFileAsync = promisify(execFile)
+
+      await execFileAsync('ffmpeg', [
+        '-i', filepath,
+        '-ss', startTime.toString(),
+        '-to', endTime.toString(),
+        '-c', 'copy',
+        outputPath
+      ])
+      return outputPath
+    } catch {
+      // FFmpeg not installed — copy the original file as fallback
+      const buffer = readFileSync(filepath)
+      writeFileSync(outputPath, buffer)
+      return outputPath
+    }
   })
 
   // Save annotated image

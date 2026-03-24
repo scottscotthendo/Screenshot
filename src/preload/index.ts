@@ -30,6 +30,10 @@ const captureAPI: CaptureAPI = {
   copyImageToClipboard: (filepath: string) => ipcRenderer.invoke('clipboard:copyImage', filepath),
   copyToClipboard: (text: string) => ipcRenderer.invoke('clipboard:copyText', text),
 
+  // Save recording blob from renderer
+  saveRecording: (arrayBuffer: ArrayBuffer, duration: number) =>
+    ipcRenderer.invoke('recording:save', arrayBuffer, duration),
+
   // Events from main process
   onScreenshotRequested: (callback: () => void) => {
     ipcRenderer.on('trigger:screenshot', () => callback())
