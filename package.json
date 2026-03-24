@@ -1,0 +1,44 @@
+{
+  "name": "mcSnapface",
+  "version": "1.0.0",
+  "description": "Personal screenshot & screen recording app for Mac",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "package": "electron-builder --mac",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://local_proxy@127.0.0.1:33831/git/scottscotthendo/Screenshot"
+  },
+  "author": "",
+  "type": "module",
+  "license": "MIT",
+  "devDependencies": {
+    "@electron-toolkit/preload": "^3.0.2",
+    "@electron-toolkit/utils": "^4.0.0",
+    "@tailwindcss/postcss": "^4.2.2",
+    "@types/node": "^25.5.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "electron": "^41.0.3",
+    "electron-builder": "^26.8.1",
+    "electron-vite": "^5.0.0",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.2"
+  },
+  "dependencies": {
+    "@vercel/blob": "^2.3.1",
+    "fabric": "^7.2.0",
+    "framer-motion": "^12.38.0",
+    "nanoid": "^5.1.7",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "zustand": "^5.0.12"
+  }
+}

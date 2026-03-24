@@ -1,0 +1,18 @@
+appId: com.mcSnapface.app
+productName: McSnapface
+directories:
+  buildResources: resources
+  output: dist
+files:
+  - out/**/*
+  - '!**/*.{ts,map}'
+mac:
+  category: public.app-category.utilities
+  target:
+    - dmg
+    - zip
+  icon: resources/icon.icns
+  entitlements: null
+  entitlementsInherit: null
+dmg:
+  artifactName: McSnapface-${version}.${ext}
