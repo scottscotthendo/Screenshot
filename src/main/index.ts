@@ -22,6 +22,7 @@ if (!gotTheLock) {
 
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
+let isQuitting = false
 const capturesDir = join(app.getPath('userData'), 'captures')
 
 // Ensure captures directory exists
@@ -105,9 +106,11 @@ function createMainWindow(): BrowserWindow {
   })
 
   window.on('close', (e) => {
-    // Hide instead of close (keep in tray)
-    e.preventDefault()
-    window.hide()
+    if (!isQuitting) {
+      // Hide instead of close (keep in tray)
+      e.preventDefault()
+      window.hide()
+    }
   })
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
@@ -409,6 +412,10 @@ app.whenReady().then(() => {
   tray = createTray()
   mainWindow = createMainWindow()
   registerGlobalShortcuts()
+})
+
+app.on('before-quit', () => {
+  isQuitting = true
 })
 
 app.on('will-quit', () => {
