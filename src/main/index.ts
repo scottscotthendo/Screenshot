@@ -4,6 +4,21 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from '
 import { stat } from 'fs/promises'
 import { nanoid } from 'nanoid'
 import { is } from '@electron-toolkit/utils'
+// Load .env file - check userData first, then project root
+for (const envPath of [join(app.getPath('userData'), '.env'), join(process.cwd(), '.env')]) {
+  if (existsSync(envPath)) {
+    for (const line of readFileSync(envPath, 'utf-8').split('\n')) {
+      const match = line.match(/^\s*([\w]+)\s*=\s*"?([^"]*)"?\s*$/)
+      if (match) process.env[match[1]] = match[2]
+    }
+    break
+  }
+}
+
+const gotTheLock = app.requestSingleInstanceLock()
+if (!gotTheLock) {
+  app.quit()
+}
 
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
@@ -158,8 +173,14 @@ function showMainWindow(): void {
 }
 
 function triggerScreenshot(): void {
-  showMainWindow()
-  mainWindow?.webContents.send('trigger:screenshot')
+  if (!mainWindow) {
+    mainWindow = createMainWindow()
+  }
+  mainWindow.hide()
+  // Wait for the window to disappear from capture sources, then trigger
+  setTimeout(() => {
+    mainWindow?.webContents.send('trigger:screenshot')
+  }, 300)
 }
 
 function triggerRecording(): void {
@@ -178,6 +199,12 @@ function registerGlobalShortcuts(): void {
 
 // IPC Handlers
 function setupIPC(): void {
+  // Show window (called from renderer when it needs to be visible)
+  ipcMain.on('window:show', () => {
+    mainWindow?.show()
+    mainWindow?.focus()
+  })
+
   // Get screen sources
   ipcMain.handle('capture:getSources', async () => {
     const sources = await desktopCapturer.getSources({

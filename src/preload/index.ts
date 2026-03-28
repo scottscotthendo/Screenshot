@@ -44,7 +44,8 @@ const captureAPI: CaptureAPI = {
 
   // App
   readFileAsDataUrl: (filepath: string) => ipcRenderer.invoke('file:readAsDataUrl', filepath),
-  showItemInFolder: (filepath: string) => ipcRenderer.send('file:showInFolder', filepath)
+  showItemInFolder: (filepath: string) => ipcRenderer.send('file:showInFolder', filepath),
+  showWindow: () => ipcRenderer.send('window:show')
 }
 
 contextBridge.exposeInMainWorld('captureAPI', captureAPI)

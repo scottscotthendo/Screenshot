@@ -10,14 +10,21 @@ export default function ScreenshotFlow() {
   const [capturing, setCapturing] = useState(false)
 
   useEffect(() => {
-    loadSources()
+    loadSources().then(sources => {
+      // If triggered via shortcut (window is hidden), auto-capture the primary screen
+      const primaryScreen = sources.find(s => s.id.startsWith('screen:'))
+      if (primaryScreen) {
+        captureSource(primaryScreen)
+      }
+    })
   }, [])
 
-  async function loadSources() {
+  async function loadSources(): Promise<CaptureSource[]> {
     try {
       if (window.captureAPI) {
         const srcs = await window.captureAPI.getScreenSources()
         setSources(srcs)
+        return srcs
       }
     } catch (err) {
       console.error('Failed to get sources:', err)
@@ -25,6 +32,7 @@ export default function ScreenshotFlow() {
     } finally {
       setLoading(false)
     }
+    return []
   }
 
   async function captureSource(source: CaptureSource) {
@@ -59,6 +67,8 @@ export default function ScreenshotFlow() {
       const dataUrl = canvas.toDataURL('image/png')
       setCurrentImageDataUrl(dataUrl)
       setCurrentCaptureId(null) // new capture
+      // Show the window for annotation
+      window.captureAPI?.showWindow()
       setView('annotation')
     } catch (err) {
       console.error('Capture failed:', err)

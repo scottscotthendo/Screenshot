@@ -66,4 +66,8 @@ export interface CaptureAPI {
   // App
   readFileAsDataUrl: (filepath: string) => Promise<string>
   showItemInFolder: (filepath: string) => void
+  showWindow: () => void
+
+  // Save recording
+  saveRecording: (arrayBuffer: ArrayBuffer, duration: number) => Promise<CaptureMetadata>
 }
